@@ -24,6 +24,6 @@ def load_model(model_path, device, in_channels, n_classes):
     checkpoint = torch.load(model_path, map_location=device)
     new_state_dict = {k.replace('model.model', 'model'): v for k, v in checkpoint['state_dict'].items() if k != "aug.rotate._param_generator.degrees"}
     model.load_state_dict(new_state_dict)
-    model = model.to(device)
+    model = model.half().to(device)
     model.eval()
     return model

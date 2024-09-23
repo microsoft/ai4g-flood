@@ -11,12 +11,13 @@ from .flood_dataset import FloodDataset
 from ..data.region_polygons import get_polygon
 
 class FloodDataModule(LightningDataModule):
-    def __init__(self, batch_size, workers, region, daterange):
+    def __init__(self, batch_size, workers, region, daterange, scale_factor):
         super().__init__()
         self.batch_size = batch_size
         self.workers = workers
         self.region = region
         self.daterange = daterange
+        self.scale_factor = scale_factor
 
     def retrieve_from_planetary_computer(self, num_retries=100):
         polygon_coords = get_polygon(self.region)
@@ -86,7 +87,7 @@ class FloodDataModule(LightningDataModule):
         items = self.retrieve_from_planetary_computer()
         items_keep, vv_paths, vh_paths = self.get_items_keep(items)
         self.test_df = self.create_ref_df(items_keep, vv_paths, vh_paths)
-        self.test_ds = FloodDataset(self.test_df)
+        self.test_ds = FloodDataset(self.test_df, self.scale_factor)
 
     def test_dataloader(self):
         return DataLoader(self.test_ds, batch_size=self.batch_size, num_workers=self.workers, 

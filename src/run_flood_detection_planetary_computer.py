@@ -20,6 +20,7 @@ def parse_args():
     parser.add_argument('--model_path', type=str, default='./models/ai4g_sar_model.ckpt', help='Path to the trained model file.')
     parser.add_argument('--output_dir', type=str, required=True, help='Directory to save output files.')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch size for inference.')
+    parser.add_argument('--no_data_flag', type=int, default=15, help='Value to use for no data areas.')
     parser.add_argument('--num_workers', type=int, default=4, help='Number of worker processes for data loading.')
     return parser.parse_args()
 
@@ -37,7 +38,7 @@ def main():
     model.eval()
 
     # Setup data module
-    dm = FloodDataModule(args.batch_size, args.num_workers, args.region, [args.start_date, args.end_date])
+    dm = FloodDataModule(args.batch_size, args.num_workers, args.region, [args.start_date, args.end_date], args.scale_factor)
     dm.setup()
 
     # Run inference
@@ -45,10 +46,6 @@ def main():
         for batch in dm.test_dataloader():
             filenames, years, months, days, orig_shapes, padded_shapes, patches, crs, transforms, ignore_flags = batch
             
-            patches = patches.to(device)
-            outputs = model(patches)
-            predictions = torch.argmax(outputs, dim=1).cpu().numpy()
-
             for i, (filename, year, month, day) in enumerate(zip(filenames, years, months, days)):
                 if ignore_flags[i]:
                     print(f"Skipping {filename} due to data issues.")
@@ -61,9 +58,9 @@ def main():
                             continue
                         _, predicted = torch.max(model(inputs), 1)
                         predicted = (predicted * 255).to(torch.int)
+                        # if any values are predicted to be the same as the no data flag, set them to the no data flag + 1 so they're not marked as no data
                         predicted[predicted == args.no_data_flag] = args.no_data_flag + 1
-                        if args.mask_zeros:
-                            predicted[(inputs[:, 0] == 0) + (inputs[:, 1] == 0)] = args.no_data_flag
+                        predicted[(inputs[:, 0] == 0) + (inputs[:, 1] == 0)] = args.no_data_flag
                         predicted = predicted.cpu().numpy()
                         preds.append(predicted)
 

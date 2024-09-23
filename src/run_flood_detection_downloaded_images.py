@@ -103,6 +103,7 @@ def main():
             output = model(batch_tensor)
             pred = torch.argmax(output, dim=1)
             pred = (pred * 255).to(torch.int)
+            # if any values are predicted to be the same as the no data flag, set them to the no data flag + 1 so they're not marked as no data
             pred[pred == args.no_data_flag] = args.no_data_flag + 1
             pred[(batch_tensor[:, 0] == 0) | (batch_tensor[:, 1] == 0)] = args.no_data_flag
             predictions.extend(pred.cpu().numpy())

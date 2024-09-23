@@ -9,11 +9,10 @@ import time
 import re
 
 class FloodDataset(Dataset):
-    def __init__(self, dataframe, scale_factor, no_data_flag=15, input_size=128, vv_threshold=100, vh_threshold=90, 
+    def __init__(self, dataframe, scale_factor, input_size=128, vv_threshold=100, vh_threshold=90, 
                  delta_amplitude=10, vv_min_threshold=75, vh_min_threshold=70, run_vv_only=False):
         self.dataset = dataframe
         self.scale_factor = scale_factor
-        self.no_data_flag = no_data_flag
         self.input_size = input_size
         self.vv_threshold = vv_threshold
         self.vh_threshold = vh_threshold
