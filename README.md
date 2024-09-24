@@ -53,7 +53,6 @@ python src/run_flood_detection.py \
     --batch_size 1 \
     --patch_size 1024 \
     --input_size 128 \
-    --no_data_flag 15 \
     --mask_zeros
 ```
 

@@ -8,21 +8,21 @@ from torch.utils.data import DataLoader
 from lightning import LightningDataModule
 import time
 from .flood_dataset import FloodDataset
-from ..data.region_polygons import get_polygon
+from data.region_polygons import get_polygon
 
 class FloodDataModule(LightningDataModule):
-    def __init__(self, batch_size, workers, region, daterange, scale_factor):
+    def __init__(self, batch_size, workers, region, daterange, scale_factor, run_vv_only=False):
         super().__init__()
         self.batch_size = batch_size
         self.workers = workers
         self.region = region
         self.daterange = daterange
         self.scale_factor = scale_factor
+        self.run_vv_only = run_vv_only
 
     def retrieve_from_planetary_computer(self, num_retries=100):
         polygon_coords = get_polygon(self.region)
         polygon_geometry = {"type": "Polygon", "coordinates": [polygon_coords]}
-        
         for _ in range(num_retries):
             try:
                 catalog = pystac_client.Client.open(
@@ -36,7 +36,7 @@ class FloodDataModule(LightningDataModule):
                 )
                 return search.item_collection()
             except Exception as e:
-                print(e)
+                print(f'Exception {e} in flood_data_module.py')
                 time.sleep(60)
         raise Exception("Failed to retrieve data from Planetary Computer")
 
@@ -44,7 +44,7 @@ class FloodDataModule(LightningDataModule):
         vv_paths, vh_paths, items_keep = [], [], []
         for item in items:
             assets = planetary_computer.sign_item(item).assets
-            if run_vv_only:
+            if self.run_vv_only:
                 if 'vv' not in assets:
                     continue
                 assets['vh'] = assets['vv']
@@ -64,7 +64,6 @@ class FloodDataModule(LightningDataModule):
         df['mean_long'] = df.bbox.apply(lambda x: (x[0] + x[2]) / 2)
         df['mean_lat'] = df.bbox.apply(lambda x: (x[1] + x[3]) / 2)
         df['obs_time'] = df.obs_dt.apply(lambda x: datetime.combine(datetime(2000, 1, 1), x.time()))
-
         vv, vh, vv_ref, vh_ref = [], [], [], []
         for i, row in df.iterrows():
             reference_time = row.obs_time
@@ -87,7 +86,7 @@ class FloodDataModule(LightningDataModule):
         items = self.retrieve_from_planetary_computer()
         items_keep, vv_paths, vh_paths = self.get_items_keep(items)
         self.test_df = self.create_ref_df(items_keep, vv_paths, vh_paths)
-        self.test_ds = FloodDataset(self.test_df, self.scale_factor)
+        self.test_ds = FloodDataset(self.test_df, self.scale_factor, run_vv_only=self.run_vv_only)
 
     def test_dataloader(self):
         return DataLoader(self.test_ds, batch_size=self.batch_size, num_workers=self.workers, 

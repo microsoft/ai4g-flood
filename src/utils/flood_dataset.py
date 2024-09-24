@@ -7,6 +7,7 @@ from rasterio.transform import Affine
 from .image_processing import db_scale, pad_to_nearest, create_patches
 import time
 import re
+import pandas as pd
 
 class FloodDataset(Dataset):
     def __init__(self, dataframe, scale_factor, input_size=128, vv_threshold=100, vh_threshold=90, 
@@ -92,7 +93,6 @@ class FloodDataset(Dataset):
             if vv_pre.shape != vh_pre.shape:
                 vh_pre = self.reproject_image(vh_pre, vh_ref_crs, vh_ref_transform, vv_ref_crs, vv_ref_transform, vv_pre.shape)
             vh_post = self.reproject_image(vh_post, vh_crs, vh_transform, vv_ref_crs, vv_ref_transform, vv_pre.shape)
-        
         # Calculate change
         vv_change = ((vv_post < self.vv_threshold) & (vv_pre > self.vv_threshold) & ((vv_pre - vv_post) > self.delta_amplitude)).astype(int)
         if self.run_vv_only:
@@ -104,7 +104,6 @@ class FloodDataset(Dataset):
         
         vv_change[zero_index] = 0
         vh_change[zero_index] = 0
-        
         rgb_image = np.stack((vv_change, vh_change), axis=2)
         rgb_image = pad_to_nearest(rgb_image, self.pad_amt, [0, 1])
         image_patches = create_patches(rgb_image, self.patch_size, self.stride)

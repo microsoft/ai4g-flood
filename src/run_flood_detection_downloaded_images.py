@@ -22,7 +22,6 @@ def parse_args():
     parser.add_argument('--delta_amplitude', type=int, default=10, help='Required change in amplitude for flood detection.')
     parser.add_argument('--vv_min_threshold', type=int, default=75, help='Minimum VV for water detection.')
     parser.add_argument('--vh_min_threshold', type=int, default=70, help='Minimum VH for water detection.')
-    parser.add_argument('--no_data_flag', type=int, default=15, help='Value to use for no data areas.')
     parser.add_argument('--patch_size', type=int, default=1024, help='Size of patches to process at once.')
     return parser.parse_args()
 
@@ -103,9 +102,6 @@ def main():
             output = model(batch_tensor)
             pred = torch.argmax(output, dim=1)
             pred = (pred * 255).to(torch.int)
-            # if any values are predicted to be the same as the no data flag, set them to the no data flag + 1 so they're not marked as no data
-            pred[pred == args.no_data_flag] = args.no_data_flag + 1
-            pred[(batch_tensor[:, 0] == 0) | (batch_tensor[:, 1] == 0)] = args.no_data_flag
             predictions.extend(pred.cpu().numpy())
 
     # Reconstruct the image

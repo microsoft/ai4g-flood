@@ -17,13 +17,17 @@ class SARBinarySegmentationModel(nn.Module):
         self.model = self.model.to(self.device)  
     
     def forward(self, x):   
-        return self.model(x.half().to(self.device))  
+        return self.model(x.to(self.device))  
 
 def load_model(model_path, device, in_channels, n_classes):
     model = SARBinarySegmentationModel(in_channels, n_classes, device)
     checkpoint = torch.load(model_path, map_location=device)
     new_state_dict = {k.replace('model.model', 'model'): v for k, v in checkpoint['state_dict'].items() if k != "aug.rotate._param_generator.degrees"}
     model.load_state_dict(new_state_dict)
-    model = model.half().to(device)
+    if device.type == 'cuda': 
+        model = model.half()
+    else:
+        model = model.float()
+    model = model.to(device)
     model.eval()
     return model

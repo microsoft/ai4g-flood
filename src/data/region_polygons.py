@@ -1,5 +1,6 @@
 import geopandas as gpd  
 from shapely.geometry import Polygon  
+import pandas as pd
 
   
 class CountryBoundaryManager:  
@@ -26,11 +27,11 @@ class CountryBoundaryManager:
         custom_boundary_gdf = gpd.GeoDataFrame([{'geometry': bounding_box_polygon, 'NAME_LONG': region_name}], crs='EPSG:4326')  
           
         # Append the custom GeoDataFrame to the main GeoDataFrame  
-        self.gdf = self.gdf.append(custom_boundary_gdf, ignore_index=True)  
+        self.gdf = pd.concat([self.gdf, custom_boundary_gdf], ignore_index=True)
 
-boundary_manager = CountryBoundaryManager('./country_boundaries/ne_110m_admin_0_countries.shp')  
+boundary_manager = CountryBoundaryManager('src/data/country_boundaries/ne_110m_admin_0_countries.shp')  
 #example of adding a custom region for the globe
 boundary_manager.add_custom_boundary('Global', min_lat=-70, max_lat=70, min_lon=-179.9, max_lon=179.9)  
 
 def get_polygon(region):
-    return boundary_manager.get_country_polygon(region)  
+    return list(boundary_manager.get_country_polygon(region).exterior.coords)
