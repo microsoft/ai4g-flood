@@ -11,7 +11,7 @@ This repository contains a flood detection model that uses Synthetic Aperture Ra
 - [Model Details](#model-details)
 - [Data](#data)
 - [Contributing](#contributing)
-- [License](#license)
+- [Citation](#citation)
 
 ## Installation
 
@@ -94,19 +94,6 @@ The model uses Sentinel-1 SAR data accessed through the Microsoft Planetary Comp
 
 Contributions to this project are welcome. Please fork the repository and submit a pull request with your changes.
 
-## License
+## Citation
 
-[Add your chosen license here]
-
-```
-
-This README provides a basic structure and information about your flood detection model project. You may want to expand on certain sections, such as:
-
-1. Adding more detailed usage examples
-2. Providing information about the model's performance and any benchmarks
-3. Explaining the data preprocessing steps in more detail
-4. Adding a section on how to train or fine-tune the model
-5. Including information about the project's history or future plans
-6. Adding contact information or links to related resources
-
-Feel free to modify and expand this README to best suit your project's needs and to provide the most useful information to potential users of your flood detection model.
+If you use find this work useful, please cite our paper: https://arxiv.org/abs/2411.01411
