@@ -44,26 +44,67 @@ This repository contains a flood detection model that uses Synthetic Aperture Ra
 To run inference using images from the Planetary Computer:
 
 ```bash
-python src/run_flood_detection.py \
+python src/run_flood_detection_planetary_computer.py \
     --region "your_region" \
+    --device_index 0 \
+    --planetary_computer_subscription_key "your_key" \
+    --scale_factor 3 \
     --start_date "2023-01-01" \
     --end_date "2023-12-31" \
-    --model_path "path/to/your/model.pth" \
-    --output_dir "path/to/output/directory" \
-    --batch_size 1 \
-    --patch_size 1024 \
-    --input_size 128 \
-    --mask_zeros
+    --model_path "./models/ai4g_sar_model.ckpt" \
+    --output_dir "results"
 ```
+
+This will create a directory structure like:
+```
+results/
+├── 2023/
+│   ├── 01/
+│   │   ├── 01/
+│   │   │   ├── file1_flood_prediction.tif
+│   │   │   └── file2_flood_prediction.tif
+│   │   └── 02/
+│   └── 02/
+```
+
+### Merging Results
+
+After running flood detection, you can merge all the individual prediction files into a single consolidated raster:
+
+```bash
+python src/merge.py \
+    --input_dir results \
+    --output merged_flood_predictions.tif \
+    --verbose
+```
+
+This will:
+- Project all rasters to EPSG:3857 (Web Mercator)
+- Merge overlapping areas using the maximum flood confidence
+- Convert values: np.nan → 0 (no flood), 255 → 1 (flood)
+- Save with ZSTD compression and tiling
+
+For more options, see the [merge script documentation](src/README_merge.md).
 
 ### Local Image Inference
 
-For local image inference, use the `local_image_inference.py` script (implementation details to be added).
+To run inference on local image pairs:
+
+```bash
+python src/run_flood_detection_downloaded_images.py \
+    --pre_vv "path/to/pre_vv.tif" \
+    --pre_vh "path/to/pre_vh.tif" \
+    --post_vv "path/to/post_vv.tif" \
+    --post_vh "path/to/post_vh.tif" \
+    --model_path "./models/ai4g_sar_model.ckpt" \
+    --output_dir "local_results" \
+    --output_name "flood_prediction.tif"
+```
 
 ## Project Structure
 
 ```
-flood-detection-model/
+ai4g-flood/
 │
 ├── src/
 │   ├── utils/
@@ -72,13 +113,20 @@ flood-detection-model/
 │   │   ├── image_processing.py
 │   │   └── model.py
 │   │
-│   └── run_flood_detection.py
+│   ├── data/
+│   │   ├── region_polygons.py
+│   │   └── country_boundaries/
+│   │
+│   ├── run_flood_detection_planetary_computer.py
+│   ├── run_flood_detection_downloaded_images.py
+│   ├── merge.py                    # Merge multiple flood predictions
+│   └── README_merge.md             # Detailed merge script documentation
 │
 ├── models/
-│   └── flood_detection_model.pth
+│   └── ai4g_sar_model.ckpt
 │
 ├── requirements.txt
-├── setup.py
+├── LICENSE.md
 └── README.md
 ```
 
