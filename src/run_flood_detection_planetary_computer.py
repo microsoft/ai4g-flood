@@ -1,14 +1,16 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 import argparse
-import torch
 import os
-from utils.flood_data_module import FloodDataModule
-from utils.model import load_model
-from utils.image_processing import reconstruct_image_from_patches
-import rasterio
-import planetary_computer
+
 import numpy as np
+import planetary_computer
+import rasterio
+import torch
+
+from utils.flood_data_module import FloodDataModule
+from utils.image_processing import reconstruct_image_from_patches
+from utils.model import load_model
 
 # set constants that are used throughout the script
 in_channels = 2

@@ -1,16 +1,17 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import numpy as np
-import torch
-from torch.utils.data import Dataset
-import rasterio
-from rasterio.warp import reproject, Resampling
-from rasterio.transform import Affine
-from .image_processing import db_scale, pad_to_nearest, create_patches
-import time
 import re
-import pandas as pd
+import time
+
+import numpy as np
 import planetary_computer as pc
+import rasterio
+from rasterio.transform import Affine
+from rasterio.warp import Resampling, reproject
+from torch.utils.data import Dataset
+
+from .image_processing import create_patches, db_scale, pad_to_nearest
+
 
 class FloodDataset(Dataset):
     def __init__(self, dataframe, scale_factor, input_size=128, vv_threshold=100, vh_threshold=90, 

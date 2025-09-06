@@ -1,16 +1,18 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import torch
-import pandas as pd
-import numpy as np
-from datetime import datetime
-import pystac_client
-import planetary_computer
-from torch.utils.data import DataLoader
-from lightning import LightningDataModule
 import time
-from .flood_dataset import FloodDataset
+from datetime import datetime
+
+import pandas as pd
+import pystac_client
+import torch
+from lightning import LightningDataModule
+from torch.utils.data import DataLoader
+
 from data.region_polygons import get_polygon
+
+from .flood_dataset import FloodDataset
+
 
 class FloodDataModule(LightningDataModule):
     def __init__(self, batch_size, workers, region, daterange, scale_factor, run_vv_only=False):

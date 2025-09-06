@@ -1,9 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 import numpy as np
-import rasterio
-from rasterio.warp import reproject, Resampling
-from rasterio.transform import Affine
+from rasterio.warp import Resampling, reproject
+
 
 def db_scale(x):
     """Convert to decibel scale and shift towards middle of 0-255 range."""

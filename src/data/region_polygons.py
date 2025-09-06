@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import geopandas as gpd  
-from shapely.geometry import Polygon  
+import geopandas as gpd
 import pandas as pd
+from shapely.geometry import Polygon
 
-  
+
 class CountryBoundaryManager:  
     def __init__(self, shapefile_path):  
         self.gdf = gpd.read_file(shapefile_path)  

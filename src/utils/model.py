@@ -1,8 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
-import segmentation_models_pytorch as smp
+
 
 class SARBinarySegmentationModel(nn.Module):
     def __init__(self, in_channels, n_classes, device, encoder_name="mobilenet_v2", encoder_weights=None, activation="softmax"):

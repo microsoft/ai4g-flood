@@ -2,13 +2,16 @@
 # Licensed under the MIT License.
 import argparse
 import os
-import torch
+
 import numpy as np
 import rasterio
-from rasterio.warp import reproject, Resampling, calculate_default_transform
-from rasterio.transform import Affine
+import torch
+from rasterio.warp import Resampling, reproject
+
+from utils.image_processing import (create_patches, db_scale, pad_to_nearest,
+                                    reconstruct_image_from_patches)
 from utils.model import load_model
-from utils.image_processing import db_scale, pad_to_nearest, create_patches, reconstruct_image_from_patches
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run flood detection on local image pairs.')
