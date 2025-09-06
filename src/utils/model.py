@@ -23,7 +23,7 @@ class SARBinarySegmentationModel(nn.Module):
 
 def load_model(model_path, device, in_channels, n_classes):
     model = SARBinarySegmentationModel(in_channels, n_classes, device)
-    checkpoint = torch.load(model_path, map_location=device)
+    checkpoint = torch.load(model_path, map_location=device, weights_only=False)
     new_state_dict = {k.replace('model.model', 'model'): v for k, v in checkpoint['state_dict'].items() if k != "aug.rotate._param_generator.degrees"}
     model.load_state_dict(new_state_dict)
     if device.type == 'cuda': 
