@@ -10,6 +10,7 @@ from .image_processing import db_scale, pad_to_nearest, create_patches
 import time
 import re
 import pandas as pd
+import planetary_computer as pc
 
 class FloodDataset(Dataset):
     def __init__(self, dataframe, scale_factor, input_size=128, vv_threshold=100, vh_threshold=90, 
@@ -33,7 +34,7 @@ class FloodDataset(Dataset):
     def read_image_data(self, url, max_retries=2, delay=0.1):  
         retries = 0  
         ignore_flag = 0
-        url = "/vsicurl/" + url 
+        url = "/vsicurl/" + pc.sign(url)
         while retries < max_retries:  
             try:  
                 with rasterio.open(url) as dataset: 

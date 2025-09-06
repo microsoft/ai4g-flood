@@ -29,7 +29,6 @@ class FloodDataModule(LightningDataModule):
             try:
                 catalog = pystac_client.Client.open(
                     "https://planetarycomputer.microsoft.com/api/stac/v1",
-                    modifier=planetary_computer.sign_inplace,
                 )
                 search = catalog.search(
                     collections=["sentinel-1-rtc"],
@@ -45,7 +44,7 @@ class FloodDataModule(LightningDataModule):
     def get_items_keep(self, items):
         vv_paths, vh_paths, items_keep = [], [], []
         for item in items:
-            assets = planetary_computer.sign_item(item).assets
+            assets = item.assets
             if self.run_vv_only:
                 if 'vv' not in assets:
                     continue
@@ -88,6 +87,7 @@ class FloodDataModule(LightningDataModule):
         items = self.retrieve_from_planetary_computer()
         items_keep, vv_paths, vh_paths = self.get_items_keep(items)
         self.test_df = self.create_ref_df(items_keep, vv_paths, vh_paths)
+        self.test_df.to_csv(f'{self.region}_test.csv', index=False)
         self.test_ds = FloodDataset(self.test_df, self.scale_factor, run_vv_only=self.run_vv_only)
 
     def test_dataloader(self):
