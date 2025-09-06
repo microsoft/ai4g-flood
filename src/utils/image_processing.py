@@ -7,7 +7,8 @@ from rasterio.transform import Affine
 
 def db_scale(x):
     """Convert to decibel scale and shift towards middle of 0-255 range."""
-    xnew = 10 * np.log10(x)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        xnew = 10 * np.log10(x)
     xnew = xnew * 2 + 135
     return np.clip(np.nan_to_num(xnew, 0), 0, 255)
 
