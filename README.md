@@ -21,7 +21,7 @@ This repository contains a flood detection model that uses Synthetic Aperture Ra
    cd ai4g-flood
    ```
 
-2. Create a new virtual environment (optional but recommended):
+2. Create a new virtual environment using Python<3.12 (optional but recommended):
    ```
    python -m venv venv
    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
@@ -37,6 +37,14 @@ This repository contains a flood detection model that uses Synthetic Aperture Ra
    pip install -e .
    ```
 
+
+Alternatively, you can use `conda` to create an environment:
+```
+conda env create -f environment.yml
+conda activate ai4g-flood
+```
+
+
 ## Usage
 
 ### Planetary Computer Inference
@@ -44,21 +52,20 @@ This repository contains a flood detection model that uses Synthetic Aperture Ra
 To run inference using images from the Planetary Computer:
 
 ```bash
-python src/run_flood_detection.py \
-    --region "your_region" \
+python src/run_flood_detection_planetary_computer.py \
+    --region "your_region" \  # should be a country from ne_110m_admin_0_countries.shp, see src/data/country_boundaries
     --start_date "2023-01-01" \
     --end_date "2023-12-31" \
-    --model_path "path/to/your/model.pth" \
+    --model_path "models/ai4g_sar_model.ckpt" \
     --output_dir "path/to/output/directory" \
     --batch_size 1 \
-    --patch_size 1024 \
     --input_size 128 \
-    --mask_zeros
+    --device_index 0
 ```
 
 ### Local Image Inference
 
-For local image inference, use the `local_image_inference.py` script (implementation details to be added).
+For local image inference, use the `run_flood_detection_downloaded_images.py` script (implementation details to be added).
 
 ## Project Structure
 
@@ -72,13 +79,13 @@ flood-detection-model/
 │   │   ├── image_processing.py
 │   │   └── model.py
 │   │
-│   └── run_flood_detection.py
+|   ├── run_flood_detection_downloaded_images.py
+│   └── run_flood_detection_planetary_computer.py
 │
 ├── models/
-│   └── flood_detection_model.pth
+│   └── ai4g_sar_model.ckpt
 │
 ├── requirements.txt
-├── setup.py
 └── README.md
 ```
 
@@ -96,4 +103,18 @@ Contributions to this project are welcome. Please fork the repository and submit
 
 ## Citation
 
-If you use find this work useful, please cite our paper: https://arxiv.org/abs/2411.01411
+If you use find this work useful, please cite our [Nature Communications paper](https://arxiv.org/abs/2411.01411), or on [arxiv](https://arxiv.org/abs/2411.01411).
+
+Bibtex:
+```
+@article{misra2025mapping,
+  title={Mapping global floods with 10 years of satellite radar data},
+  author={Misra, Amit and White, Kevin and Nsutezo, Simone Fobi and Straka III, William and Lavista, Juan},
+  journal={Nature Communications},
+  volume={16},
+  number={1},
+  pages={5762},
+  year={2025},
+  publisher={Nature Publishing Group UK London}
+}
+```

@@ -1,25 +1,25 @@
 # Core data science and machine learning libraries
-numpy==1.24.4
-pandas==2.0.3
+numpy
+pandas
 
 # Deep learning framework
-torch==1.13.1
+torch
 
 # Image processing and geospatial data handling
-rasterio==1.3.9
-affine==2.4.0
-geopandas==0.13.2
-shapely==2.0.2
+rasterio
+affine
+geopandas
+shapely
 
 # Planetary Computer interaction
-pystac-client==0.7.5
-planetary-computer==1.0.0
+pystac-client
+planetary-computer
 
 # Lightning for easier PyTorch training
-lightning==2.1.2
+lightning
 
 # Segmentation models
-segmentation-models-pytorch==0.3.3
+segmentation-models-pytorch
 
 # Optional: for potential future use or debugging
-matplotlib==3.7.3
+matplotlib
