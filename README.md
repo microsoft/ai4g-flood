@@ -67,15 +67,19 @@ results/
 │   └── 02/
 ```
 
+These individual GeoTIFF files:
+- May have different coordinate reference systems (CRS)
+- Can overlap spatially
+- Contain flood predictions with values of 255 (flood) and np.NaN (no flood/no data)
+
 ### Merging Results
 
 After running flood detection, you can merge all the individual prediction files into a single consolidated raster:
 
 ```bash
 python src/merge.py \
-    --input_dir results \
-    --output merged_flood_predictions.tif \
-    --verbose
+    --input_root results \
+    --output merged_flood_predictions.tif
 ```
 
 This will:
@@ -83,8 +87,6 @@ This will:
 - Merge overlapping areas using the maximum flood confidence
 - Convert values: np.nan → 0 (no flood), 255 → 1 (flood)
 - Save with ZSTD compression and tiling
-
-For more options, see the [merge script documentation](src/README_merge.md).
 
 ### Local Image Inference
 
@@ -119,8 +121,7 @@ ai4g-flood/
 │   │
 │   ├── run_flood_detection_planetary_computer.py
 │   ├── run_flood_detection_downloaded_images.py
-│   ├── merge.py                    # Merge multiple flood predictions
-│   └── README_merge.md             # Detailed merge script documentation
+│   └── merge.py
 │
 ├── models/
 │   └── ai4g_sar_model.ckpt
