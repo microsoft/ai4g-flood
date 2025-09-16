@@ -27,28 +27,26 @@ def to_binary_memfile(src_path: Path) -> MemoryFile:
 
     Returns a MemoryFile with same geotransform/CRS.
     """
-    src = rasterio.open(src_path)
-    data = src.read(1, masked=True)  # masked array if nodata present
+    with rasterio.open(src_path) as src:
+        data = src.read(1, masked=True)  # masked array if nodata present
 
-    # Build binary mask: 1 where value == 255, else 0
-    # Works for float/uint inputs; NaNs won't equal 255 and thus map to 0.
-    bin_arr = (data.filled(np.nan) == 255).astype(np.uint8)
+        # Build binary mask: 1 where value == 255, else 0
+        # Works for float/uint inputs; NaNs won't equal 255 and thus map to 0.
+        bin_arr = (data.filled(np.nan) == 255).astype(np.uint8)
 
-    # Create an in-memory dataset with same transform/CRS/shape
-    profile = src.profile.copy()
-    profile.update(
-        dtype=rasterio.uint8,
-        count=1,
-        nodata=0,  # we'll use 0 as nodata/"no flood"
-        compress="DEFLATE",  # internal for the temp MemoryFile; final output will be ZSTD
-        tiled=False,
-    )
+        # Create an in-memory dataset with same transform/CRS/shape
+        profile = src.profile.copy()
+        profile.update(
+            dtype=rasterio.uint8,
+            count=1,
+            nodata=0,  # we'll use 0 as nodata/"no flood"
+            compress="DEFLATE",  # internal for the temp MemoryFile; final output will be ZSTD
+            tiled=False,
+        )
 
-    memfile = MemoryFile()
-    with memfile.open(**profile) as dst:
-        dst.write(bin_arr, 1)
-
-    src.close()
+        memfile = MemoryFile()
+        with memfile.open(**profile) as dst:
+            dst.write(bin_arr, 1)
     return memfile
 
 
