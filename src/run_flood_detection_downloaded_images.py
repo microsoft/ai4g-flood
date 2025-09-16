@@ -2,33 +2,47 @@
 # Licensed under the MIT License.
 import argparse
 import os
-import torch
+
 import numpy as np
 import rasterio
-from rasterio.warp import reproject, Resampling, calculate_default_transform
-from rasterio.transform import Affine
+import torch
+from rasterio.warp import Resampling, reproject
+
+from utils.image_processing import create_patches, db_scale, pad_to_nearest, reconstruct_image_from_patches
 from utils.model import load_model
-from utils.image_processing import db_scale, pad_to_nearest, create_patches, reconstruct_image_from_patches
+
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Run flood detection on local image pairs.')
-    parser.add_argument('--pre_vv', type=str, required=True, help='Path to pre-event VV polarization image.')
-    parser.add_argument('--pre_vh', type=str, required=True, help='Path to pre-event VH polarization image.')
-    parser.add_argument('--post_vv', type=str, required=True, help='Path to post-event VV polarization image.')
-    parser.add_argument('--post_vh', type=str, required=True, help='Path to post-event VH polarization image.')
-    parser.add_argument('--model_path', type=str, default='./models/ai4g_sar_model.ckpt', help='Path to the trained model file.')
-    parser.add_argument('--output_dir', type=str, required=True, help='Directory to save output files.')
-    parser.add_argument('--output_name', type=str, default='flood_predictions.tif', help='Custom name of file (optional)')
-    parser.add_argument('--scale_factor', type=float, default=1.0, help='Scale factor for image resolution.')
-    parser.add_argument('--vv_threshold', type=int, default=100, help='VV threshold for water detection.')
-    parser.add_argument('--vh_threshold', type=int, default=90, help='VH threshold for water detection.')
-    parser.add_argument('--delta_amplitude', type=int, default=10, help='Required change in amplitude for flood detection.')
-    parser.add_argument('--vv_min_threshold', type=int, default=75, help='Minimum VV for water detection.')
-    parser.add_argument('--vh_min_threshold', type=int, default=70, help='Minimum VH for water detection.')
-    parser.add_argument('--patch_size', type=int, default=1024, help='Size of patches to process at once.')
-    parser.add_argument('--device_index', type=int, default=-1, help='Device index (use -1 for CPU, >=0 for GPU).')
-    parser.add_argument('--keep_all_predictions', action='store_true', default=False, help='Whether to restrict flood detections to pixels that are within water thresholds')
+    parser = argparse.ArgumentParser(description="Run flood detection on local image pairs.")
+    parser.add_argument("--pre_vv", type=str, required=True, help="Path to pre-event VV polarization image.")
+    parser.add_argument("--pre_vh", type=str, required=True, help="Path to pre-event VH polarization image.")
+    parser.add_argument("--post_vv", type=str, required=True, help="Path to post-event VV polarization image.")
+    parser.add_argument("--post_vh", type=str, required=True, help="Path to post-event VH polarization image.")
+    parser.add_argument(
+        "--model_path", type=str, default="./models/ai4g_sar_model.ckpt", help="Path to the trained model file."
+    )
+    parser.add_argument("--output_dir", type=str, required=True, help="Directory to save output files.")
+    parser.add_argument(
+        "--output_name", type=str, default="flood_predictions.tif", help="Custom name of file (optional)"
+    )
+    parser.add_argument("--scale_factor", type=float, default=1.0, help="Scale factor for image resolution.")
+    parser.add_argument("--vv_threshold", type=int, default=100, help="VV threshold for water detection.")
+    parser.add_argument("--vh_threshold", type=int, default=90, help="VH threshold for water detection.")
+    parser.add_argument(
+        "--delta_amplitude", type=int, default=10, help="Required change in amplitude for flood detection."
+    )
+    parser.add_argument("--vv_min_threshold", type=int, default=75, help="Minimum VV for water detection.")
+    parser.add_argument("--vh_min_threshold", type=int, default=70, help="Minimum VH for water detection.")
+    parser.add_argument("--patch_size", type=int, default=1024, help="Size of patches to process at once.")
+    parser.add_argument("--device_index", type=int, default=-1, help="Device index (use -1 for CPU, >=0 for GPU).")
+    parser.add_argument(
+        "--keep_all_predictions",
+        action="store_true",
+        default=False,
+        help="Whether to restrict flood detections to pixels that are within water thresholds",
+    )
     return parser.parse_args()
+
 
 def read_and_preprocess(file_path, scale_factor):
     with rasterio.open(file_path) as src:
@@ -37,45 +51,48 @@ def read_and_preprocess(file_path, scale_factor):
         else:
             image = src.read(
                 1,
-                out_shape=(
-                    src.count,
-                    int(src.height * scale_factor),
-                    int(src.width * scale_factor)
-                ),
-                resampling=Resampling.bilinear
+                out_shape=(src.count, int(src.height * scale_factor), int(src.width * scale_factor)),
+                resampling=Resampling.bilinear,
             )
-        transform = src.transform * src.transform.scale(
-            (src.width / image.shape[-1]),
-            (src.height / image.shape[-2])
-        )
+        transform = src.transform * src.transform.scale((src.width / image.shape[-1]), (src.height / image.shape[-2]))
         image = db_scale(image)
         return image, src.crs, transform
 
+
 def calculate_flood_change(vv_pre, vh_pre, vv_post, vh_post, params):
-    vv_change = ((vv_post < params['vv_threshold']) & 
-                 (vv_pre > params['vv_threshold']) & 
-                 ((vv_pre - vv_post) > params['delta_amplitude'])).astype(int)
-    vh_change = ((vh_post < params['vh_threshold']) & 
-                 (vh_pre > params['vh_threshold']) & 
-                 ((vh_pre - vh_post) > params['delta_amplitude'])).astype(int)
-    
-    zero_index = ((vv_post < params['vv_min_threshold']) | 
-                  (vv_pre < params['vv_min_threshold']) | 
-                  (vh_post < params['vh_min_threshold']) | 
-                  (vh_pre < params['vh_min_threshold']))
+    vv_change = (
+        (vv_post < params["vv_threshold"])
+        & (vv_pre > params["vv_threshold"])
+        & ((vv_pre - vv_post) > params["delta_amplitude"])
+    ).astype(int)
+    vh_change = (
+        (vh_post < params["vh_threshold"])
+        & (vh_pre > params["vh_threshold"])
+        & ((vh_pre - vh_post) > params["delta_amplitude"])
+    ).astype(int)
+
+    zero_index = (
+        (vv_post < params["vv_min_threshold"])
+        | (vv_pre < params["vv_min_threshold"])
+        | (vh_post < params["vh_min_threshold"])
+        | (vh_pre < params["vh_min_threshold"])
+    )
     vv_change[zero_index] = 0
     vh_change[zero_index] = 0
     return np.stack((vv_change, vh_change), axis=2)
 
+
 def main():
     args = parse_args()
-    device = torch.device(f'cuda:{args.device_index}' if (torch.cuda.is_available() and args.device_index >= 0) else 'cpu')
+    device = torch.device(
+        f"cuda:{args.device_index}" if (torch.cuda.is_available() and args.device_index >= 0) else "cpu"
+    )
 
     # Load images
-    vv_pre, vv_pre_crs, vv_pre_transform = read_and_preprocess(args.pre_vv, 1./args.scale_factor)
-    vh_pre, vh_pre_crs, vh_pre_transform= read_and_preprocess(args.pre_vh, 1./args.scale_factor)
-    vv_post, vv_post_crs, vv_post_transform = read_and_preprocess(args.post_vv, 1./args.scale_factor)
-    vh_post, vh_post_crs, vh_post_transform = read_and_preprocess(args.post_vh, 1./args.scale_factor)
+    vv_pre, vv_pre_crs, vv_pre_transform = read_and_preprocess(args.pre_vv, 1.0 / args.scale_factor)
+    vh_pre, vh_pre_crs, vh_pre_transform = read_and_preprocess(args.pre_vh, 1.0 / args.scale_factor)
+    vv_post, vv_post_crs, vv_post_transform = read_and_preprocess(args.post_vv, 1.0 / args.scale_factor)
+    vh_post, vh_post_crs, vh_post_transform = read_and_preprocess(args.post_vh, 1.0 / args.scale_factor)
     # Use vv_post shape as the target shape
     target_shape = vv_post.shape
     vv_pre = reproject_image(vv_pre, vv_pre_crs, vv_pre_transform, vv_post_crs, vv_post_transform, target_shape)
@@ -96,11 +113,11 @@ def main():
     predictions = []
     with torch.no_grad():
         for i in range(0, len(patches), args.patch_size):
-            batch = patches[i:i+args.patch_size]
+            batch = patches[i : i + args.patch_size]
             if len(batch) == 0:
                 continue
             batch_tensor = torch.from_numpy(np.array(batch)).to(device)
-            if device.type == 'cuda':
+            if device.type == "cuda":
                 batch_tensor = batch_tensor.half()
             else:
                 batch_tensor = batch_tensor.float()
@@ -111,38 +128,52 @@ def main():
                 predicted[(batch_tensor[:, 0] == 0) + (batch_tensor[:, 1] == 0)] = 0
             predictions.extend(predicted.cpu().numpy())
 
-
     # Reconstruct the image
-    pred_image, _ = reconstruct_image_from_patches(predictions, flood_change.shape[:2], (input_size, input_size), input_size)
-    pred_image = pred_image[:target_shape[0], :target_shape[1]]  # Crop to original size
+    pred_image, _ = reconstruct_image_from_patches(
+        predictions, flood_change.shape[:2], (input_size, input_size), input_size
+    )
+    pred_image = pred_image[: target_shape[0], : target_shape[1]]  # Crop to original size
 
     # Save the result
     os.makedirs(args.output_dir, exist_ok=True)
     output_filename = os.path.join(args.output_dir, args.output_name)
     save_prediction(pred_image, output_filename, vv_post_crs, vv_post_transform)
     print(f"Flood prediction saved to {output_filename}")
-    if device.type == 'cuda':
+    if device.type == "cuda":
         torch.cuda.empty_cache()
 
 
 def reproject_image(image, src_crs, src_transform, dst_crs, dst_transform, dst_shape):
-    image = image.astype('float32')  # Reproject requires float32
+    image = image.astype("float32")  # Reproject requires float32
     reprojected, _ = reproject(
         image,
-        np.empty(dst_shape, dtype='float32'),
+        np.empty(dst_shape, dtype="float32"),
         src_transform=src_transform,
         src_crs=src_crs,
         dst_transform=dst_transform,
         dst_crs=dst_crs,
-        resampling=Resampling.nearest
+        resampling=Resampling.nearest,
     )
     return reprojected
 
+
 def save_prediction(pred_image, output_filename, crs, transform):
     pred_image[pred_image == 0] = np.nan
-    with rasterio.open(output_filename, 'w', driver='GTiff', height=pred_image.shape[0], width=pred_image.shape[1],
-                       count=1, dtype=pred_image.dtype, crs=crs, transform=transform, compress='lzw', nodata=np.nan) as dst:
+    with rasterio.open(
+        output_filename,
+        "w",
+        driver="GTiff",
+        height=pred_image.shape[0],
+        width=pred_image.shape[1],
+        count=1,
+        dtype=pred_image.dtype,
+        crs=crs,
+        transform=transform,
+        compress="lzw",
+        nodata=np.nan,
+    ) as dst:
         dst.write(pred_image, 1)
+
 
 if __name__ == "__main__":
     main()

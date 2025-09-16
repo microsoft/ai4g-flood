@@ -21,7 +21,7 @@ This repository contains a flood detection model that uses Synthetic Aperture Ra
    cd ai4g-flood
    ```
 
-2. Create a new virtual environment (optional but recommended):
+2. Create a new virtual environment using Python<3.12 (optional but recommended):
    ```
    python -m venv venv
    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
@@ -37,6 +37,14 @@ This repository contains a flood detection model that uses Synthetic Aperture Ra
    pip install -e .
    ```
 
+
+Alternatively, you can use `conda` to create an environment:
+```
+conda env create -f environment.yml
+conda activate ai4g-flood
+```
+
+
 ## Usage
 
 ### Planetary Computer Inference
@@ -45,14 +53,14 @@ To run inference using images from the Planetary Computer:
 
 ```bash
 python src/run_flood_detection_planetary_computer.py \
-    --region "your_region" \
-    --device_index 0 \
-    --planetary_computer_subscription_key "your_key" \
-    --scale_factor 3 \
+    --region "your_region" \  # should be a country from ne_110m_admin_0_countries.shp, see src/data/country_boundaries
     --start_date "2023-01-01" \
     --end_date "2023-12-31" \
-    --model_path "./models/ai4g_sar_model.ckpt" \
-    --output_dir "results"
+    --model_path "models/ai4g_sar_model.ckpt" \
+    --output_dir "path/to/output/directory" \
+    --batch_size 1 \
+    --input_size 128 \
+    --device_index 0
 ```
 
 This will create a directory structure like:
@@ -103,6 +111,7 @@ python src/run_flood_detection_downloaded_images.py \
     --output_name "flood_prediction.tif"
 ```
 
+
 ## Project Structure
 
 ```
@@ -127,7 +136,6 @@ ai4g-flood/
 │   └── ai4g_sar_model.ckpt
 │
 ├── requirements.txt
-├── LICENSE.md
 └── README.md
 ```
 
@@ -145,4 +153,18 @@ Contributions to this project are welcome. Please fork the repository and submit
 
 ## Citation
 
-If you use find this work useful, please cite our paper: https://arxiv.org/abs/2411.01411
+If you use find this work useful, please cite our [Nature Communications paper](https://arxiv.org/abs/2411.01411), or on [arxiv](https://arxiv.org/abs/2411.01411).
+
+Bibtex:
+```
+@article{misra2025mapping,
+  title={Mapping global floods with 10 years of satellite radar data},
+  author={Misra, Amit and White, Kevin and Nsutezo, Simone Fobi and Straka III, William and Lavista, Juan},
+  journal={Nature Communications},
+  volume={16},
+  number={1},
+  pages={5762},
+  year={2025},
+  publisher={Nature Publishing Group UK London}
+}
+```
