@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+import pathlib
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
@@ -27,7 +28,16 @@ class SARBinarySegmentationModel(nn.Module):
 
 def load_model(model_path, device, in_channels, n_classes):
     model = SARBinarySegmentationModel(in_channels, n_classes, device)
-    checkpoint = torch.load(model_path, map_location=device, weights_only=False)
+
+    # Handle cross-platform checkpoint loading (fixes PosixPath on Windows issue)
+    try:
+        # Use safe_globals to allow Path objects from different platforms
+        with torch.serialization.safe_globals([pathlib.PosixPath, pathlib.WindowsPath, pathlib.Path]):
+            checkpoint = torch.load(model_path, map_location=device, weights_only=False)
+    except (AttributeError, TypeError):
+        # Fallback for older PyTorch versions or other issues
+        checkpoint = torch.load(model_path, map_location=device, weights_only=False)
+
     new_state_dict = {
         k.replace("model.model", "model"): v
         for k, v in checkpoint["state_dict"].items()
