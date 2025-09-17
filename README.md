@@ -63,14 +63,59 @@ python src/run_flood_detection_planetary_computer.py \
     --device_index 0
 ```
 
+This will create a directory structure like:
+```
+results/
+├── 2023/
+│   ├── 01/
+│   │   ├── 01/
+│   │   │   ├── file1_flood_prediction.tif
+│   │   │   └── file2_flood_prediction.tif
+│   │   └── 02/
+│   └── 02/
+```
+
+These individual GeoTIFF files:
+- May have different coordinate reference systems (CRS)
+- Can overlap spatially
+- Contain flood predictions with values of 255 (flood) and np.NaN (no flood/no data)
+
+### Merging Results
+
+After running flood detection, you can merge all the individual prediction files into a single consolidated raster:
+
+```bash
+python src/merge.py \
+    --input_root results \
+    --output merged_flood_predictions.tif
+```
+
+This will:
+- Project all rasters to EPSG:3857 (Web Mercator)
+- Merge overlapping areas using the maximum flood confidence
+- Convert values: np.nan → 0 (no flood), 255 → 1 (flood)
+- Save with ZSTD compression and tiling
+
 ### Local Image Inference
 
-For local image inference, use the `run_flood_detection_downloaded_images.py` script (implementation details to be added).
+To run inference on local image pairs:
+
+```bash
+python src/run_flood_detection_downloaded_images.py \
+    --pre_vv "path/to/pre_vv.tif" \
+    --pre_vh "path/to/pre_vh.tif" \
+    --post_vv "path/to/post_vv.tif" \
+    --post_vh "path/to/post_vh.tif" \
+    --model_path "./models/ai4g_sar_model.ckpt" \
+    --output_dir "local_results" \
+    --output_name "flood_prediction.tif"
+```
+
 
 ## Project Structure
 
 ```
-flood-detection-model/
+ai4g-flood/
 │
 ├── src/
 │   ├── utils/
@@ -79,8 +124,13 @@ flood-detection-model/
 │   │   ├── image_processing.py
 │   │   └── model.py
 │   │
-|   ├── run_flood_detection_downloaded_images.py
-│   └── run_flood_detection_planetary_computer.py
+│   ├── data/
+│   │   ├── region_polygons.py
+│   │   └── country_boundaries/
+│   │
+│   ├── run_flood_detection_planetary_computer.py
+│   ├── run_flood_detection_downloaded_images.py
+│   └── merge.py
 │
 ├── models/
 │   └── ai4g_sar_model.ckpt
