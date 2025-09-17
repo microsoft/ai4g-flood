@@ -153,7 +153,7 @@ Contributions to this project are welcome. Please fork the repository and submit
 
 ## Citation
 
-If you use find this work useful, please cite our [Nature Communications paper](https://arxiv.org/abs/2411.01411), or on [arxiv](https://arxiv.org/abs/2411.01411).
+If you use find this work useful, please cite our [Nature Communications paper](https://www.nature.com/articles/s41467-025-60973-1), or on [arxiv](https://arxiv.org/abs/2411.01411).
 
 Bibtex:
 ```
