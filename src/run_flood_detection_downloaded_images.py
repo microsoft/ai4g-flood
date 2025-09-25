@@ -19,7 +19,7 @@ def parse_args():
     parser.add_argument("--post_vv", type=str, required=True, help="Path to post-event VV polarization image.")
     parser.add_argument("--post_vh", type=str, required=True, help="Path to post-event VH polarization image.")
     parser.add_argument(
-        "--model_path", type=str, default="./models/ai4g_sar_model.ckpt", help="Path to the trained model file."
+        "--model_path", type=str, default="./models/ai4g_sar_model.pth", help="Path to the trained model file."
     )
     parser.add_argument("--output_dir", type=str, required=True, help="Directory to save output files.")
     parser.add_argument(

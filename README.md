@@ -56,7 +56,7 @@ python src/run_flood_detection_planetary_computer.py \
     --region "your_region" \  # should be a country from ne_110m_admin_0_countries.shp, see src/data/country_boundaries
     --start_date "2023-01-01" \
     --end_date "2023-12-31" \
-    --model_path "models/ai4g_sar_model.ckpt" \
+    --model_path "models/ai4g_sar_model.pth" \
     --output_dir "path/to/output/directory" \
     --batch_size 1 \
     --input_size 128 \
