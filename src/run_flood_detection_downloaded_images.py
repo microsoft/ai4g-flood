@@ -8,9 +8,8 @@ import rasterio
 import torch
 from rasterio.warp import Resampling, reproject
 
-from utils.image_processing import create_patches, db_scale, pad_to_nearest, reconstruct_image_from_patches
+from utils.image_processing import create_patches, db_scale, pad_to_nearest, reconstruct_image_from_patches, apply_buffer
 from utils.model import load_model
-
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run flood detection on local image pairs.")
@@ -40,6 +39,12 @@ def parse_args():
         action="store_true",
         default=False,
         help="Whether to restrict flood detections to pixels that are within water thresholds",
+    )
+    parser.add_argument(
+        "--buffer_size",
+        type=int,
+        default=8,
+        help="Buffer size in pixels for dilation (8 pixels ≈ 80m at 10m resolution). Set to 0 to disable buffering."
     )
     return parser.parse_args()
 
@@ -133,7 +138,18 @@ def main():
         predictions, flood_change.shape[:2], (input_size, input_size), input_size
     )
     pred_image = pred_image[: target_shape[0], : target_shape[1]]  # Crop to original size
-
+    # Apply buffer (dilation) to predictions
+    if args.buffer_size > 0:
+        pixel_resolution = abs(vv_post_transform.a)
+        buffer_distance = args.buffer_size * pixel_resolution
+        # Check if CRS is projected (meters) or geographic (degrees)
+        if vv_post_crs.is_projected:
+            # CRS units are in meters
+            print(f"Applying {args.buffer_size}-pixel buffer (≈{buffer_distance:.1f}m at {pixel_resolution:.1f}m resolution)...")
+        else:
+            # CRS units are in degrees
+            print(f"Applying {args.buffer_size}-pixel buffer (≈{buffer_distance:.6f}° at {pixel_resolution:.6f}° resolution)...")
+        pred_image = apply_buffer(pred_image, args.buffer_size)
     # Save the result
     os.makedirs(args.output_dir, exist_ok=True)
     output_filename = os.path.join(args.output_dir, args.output_name)

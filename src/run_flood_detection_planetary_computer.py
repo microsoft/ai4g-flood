@@ -9,7 +9,7 @@ import rasterio
 import torch
 
 from utils.flood_data_module import FloodDataModule
-from utils.image_processing import reconstruct_image_from_patches
+from utils.image_processing import reconstruct_image_from_patches, apply_buffer
 from utils.model import load_model
 
 # set constants that are used throughout the script
@@ -25,7 +25,7 @@ def parse_args():
         "--planetary_computer_subscription_key", type=str, default="", help="Planetary Computer subscription key."
     )
     parser.add_argument(
-        "--scale_factor", type=int, default=3, help="How much to scale resolution (3 = going from 10m to 30m)"
+        "--scale_factor", type=int, default=2, help="How much to scale resolution (2 = going from 10m to 20m)"
     )
     parser.add_argument("--start_date", type=str, required=True, help="Start date for image search (YYYY-MM-DD).")
     parser.add_argument("--end_date", type=str, required=True, help="End date for image search (YYYY-MM-DD).")
@@ -46,6 +46,12 @@ def parse_args():
         action="store_true",
         default=False,
         help="Whether to restrict flood detections to pixels that are within water thresholds",
+    )
+    parser.add_argument(
+        "--buffer_size",
+        type=int,
+        default=4,
+        help="Buffer size in pixels for dilation (4 pixels ≈ 80m at 20m resolution). Set to 0 to disable buffering."
     )
     return parser.parse_args()
 
@@ -123,6 +129,10 @@ def main():
                     output_dir = os.path.join(args.output_dir, str(year), str(month), str(day))
                     os.makedirs(output_dir, exist_ok=True)
                     output_filename = os.path.join(output_dir, f"{filename}_flood_prediction.tif")
+                    # Apply buffer (dilation) to predictions
+                    if args.buffer_size > 0:
+                        print(f"Applying {args.buffer_size}-pixel buffer (={args.buffer_size * 10*args.scale_factor}m at {10*args.scale_factor}m resolution)...")
+                        predimg = apply_buffer(predimg, args.buffer_size)
                     save_prediction(predimg, output_filename, crs[i], transforms[i])
                 except Exception as e:
                     print(f"Exception {e} in run_flood_detection_planetary_computer.py")
