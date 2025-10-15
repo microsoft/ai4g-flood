@@ -64,6 +64,8 @@ class FloodDataModule(LightningDataModule):
             {
                 "obs_dt": [pd.to_datetime(item.properties["end_datetime"]) for item in items_keep],
                 "bbox": [item.bbox for item in items_keep],
+                "platform": [item.properties['platform'] for item in items_keep],
+                "orbit_state": [item.properties['sat:orbit_state'] for item in items_keep],
             }
         )
         df["mean_long"] = df.bbox.apply(lambda x: (x[0] + x[2]) / 2)
@@ -79,6 +81,8 @@ class FloodDataModule(LightningDataModule):
                 & ((row.mean_long - df.mean_long).abs() < max_coord_diff)
                 & ((row.mean_lat - df.mean_lat).abs() < max_coord_diff)
                 & (timedeltas < max_time_delta)
+                & (row['platform'] == df['platform'])
+                & (row['orbit_state'] == df['orbit_state'])
             ]
             if not dftmp.empty:
                 ref_index = dftmp.obs_dt.idxmax()

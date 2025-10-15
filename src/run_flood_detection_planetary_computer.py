@@ -15,6 +15,7 @@ from utils.model import load_model
 # set constants that are used throughout the script
 in_channels = 2
 n_classes = 2
+pc_default_resolution = 10 # in meters
 
 
 def parse_args():
@@ -131,7 +132,7 @@ def main():
                     output_filename = os.path.join(output_dir, f"{filename}_flood_prediction.tif")
                     # Apply buffer (dilation) to predictions
                     if args.buffer_size > 0:
-                        print(f"Applying {args.buffer_size}-pixel buffer (={args.buffer_size * 10*args.scale_factor}m at {10*args.scale_factor}m resolution)...")
+                        print(f"Applying {args.buffer_size}-pixel buffer (={args.buffer_size * pc_default_resolution * args.scale_factor}m at {pc_default_resolution * args.scale_factor}m resolution)...")
                         predimg = apply_buffer(predimg, args.buffer_size)
                     save_prediction(predimg, output_filename, crs[i], transforms[i])
                 except Exception as e:
