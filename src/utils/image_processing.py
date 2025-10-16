@@ -2,6 +2,8 @@
 # Licensed under the MIT License.
 import numpy as np
 from rasterio.warp import Resampling, reproject
+from scipy.ndimage import binary_dilation
+
 
 
 def db_scale(x):
@@ -92,3 +94,33 @@ def calculate_flood_change(vv_pre, vh_pre, vv_post, vh_post, params):
     vh_change[zero_index] = 0
 
     return np.stack((vv_change, vh_change), axis=2)
+
+def apply_buffer(pred_image, buffer_size):
+    """
+    Apply morphological dilation to create a buffer around flood detections.
+    
+    Args:
+        pred_image: Binary prediction image (0 or 255)
+        buffer_size: Number of pixels to dilate (4 pixels ≈ 80m at 20m resolution)
+    
+    Returns:
+        Buffered prediction image
+    """
+    if buffer_size <= 0:
+        return pred_image
+    
+    # Convert to binary (handle NaN values)
+    binary_mask = np.zeros_like(pred_image, dtype=bool)
+    binary_mask[pred_image == 255] = True
+    
+    # Create a square structuring element
+    structure = np.ones((2 * buffer_size + 1, 2 * buffer_size + 1), dtype=bool)
+    
+    # Apply binary dilation
+    buffered_mask = binary_dilation(binary_mask, structure=structure)
+    
+    # Convert back to original format
+    buffered_image = np.zeros_like(pred_image)
+    buffered_image[buffered_mask] = 255
+    
+    return buffered_image
