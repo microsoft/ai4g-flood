@@ -60,8 +60,12 @@ python src/run_flood_detection_planetary_computer.py \
     --output_dir "path/to/output/directory" \
     --batch_size 1 \
     --input_size 128 \
-    --device_index 0
+    --device_index 0 \
+    --buffer_size 4 # Optional: Buffer size in pixels to apply to the flood prediction.
 ```
+The --buffer_size argument applies a buffer to the flood predictions. This is recommended per the analysis in the paper. The size is specified in pixels.
+
+There's also a way to run the model so that you don't need the buffer and let the neural net 'fill in' the flood extent. If you want to use this you can use the `--keep_all_predictions` parameter and set the buffer size to 0.
 
 This will create a directory structure like:
 ```
