@@ -51,7 +51,7 @@ def parse_args():
     parser.add_argument(
         "--buffer_size",
         type=int,
-        default=4,
+        default=8,
         help="Buffer size in pixels for dilation (4 pixels ≈ 80m at 20m resolution). Set to 0 to disable buffering."
     )
     return parser.parse_args()
