@@ -26,7 +26,7 @@ def parse_args():
         "--planetary_computer_subscription_key", type=str, default="", help="Planetary Computer subscription key."
     )
     parser.add_argument(
-        "--scale_factor", type=int, default=2, help="How much to scale resolution (2 = going from 10m to 20m)"
+        "--scale_factor", type=int, default=1, help="How much to scale resolution (2 = going from 10m to 20m)"
     )
     parser.add_argument("--start_date", type=str, required=True, help="Start date for image search (YYYY-MM-DD).")
     parser.add_argument("--end_date", type=str, required=True, help="End date for image search (YYYY-MM-DD).")
