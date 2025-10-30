@@ -61,7 +61,7 @@ python src/run_flood_detection_planetary_computer.py \
     --batch_size 1 \
     --input_size 128 \
     --device_index 0 \
-    --buffer_size 4 # Optional: Buffer size in pixels to apply to the flood prediction.
+    --buffer_size 8 # Optional: Buffer size in pixels to apply to the flood prediction.
 ```
 The --buffer_size argument applies a buffer to the flood predictions. This is recommended per the analysis in the paper. The size is specified in pixels.
 
