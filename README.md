@@ -7,6 +7,7 @@ This repository contains a flood detection model that uses Synthetic Aperture Ra
 - [Usage](#usage)
   - [Planetary Computer Inference](#planetary-computer-inference)
   - [Local Image Inference](#local-image-inference)
+  - [Additional post-model filtering](#additional-post-model-filtering)
 - [Project Structure](#project-structure)
 - [Model Details](#model-details)
 - [Data](#data)
@@ -63,9 +64,9 @@ python src/run_flood_detection_planetary_computer.py \
     --device_index 0 \
     --buffer_size 8 # Optional: Buffer size in pixels to apply to the flood prediction.
 ```
-The --buffer_size argument applies a buffer to the flood predictions. This is recommended per the analysis in the paper. The size is specified in pixels.
+The --buffer_size argument applies a buffer to the flood predictions, in pixels. If you want to follow the methodology in the paper, you would need to run with an 80-meter buffer.
 
-There's also a way to run the model so that you don't need the buffer and let the neural net 'fill in' the flood extent. If you want to use this you can use the `--keep_all_predictions` parameter and set the buffer size to 0.
+There's also a way to run the model so that you don't need the buffer and let the neural net 'fill in' the flood extent. If you want to use this you can use the `--keep_all_predictions` parameter and set the `buffer_size` to 0. This is somewhat experimental, but often matches the underlying SAR data better without the need of the 80-meter buffer.
 
 This will create a directory structure like:
 ```
@@ -84,7 +85,7 @@ These individual GeoTIFF files:
 - Can overlap spatially
 - Contain flood predictions with values of 255 (flood) and np.NaN (no flood/no data)
 
-### Merging Results
+#### Merging Results
 
 After running flood detection, you can merge all the individual prediction files into a single consolidated raster:
 
@@ -102,6 +103,30 @@ This will:
 
 ### Local Image Inference
 
+#### Downloading images
+
+You can download images from planetary computer, or any other Sentinel-1 imagery provided. **Important:** This model was trained on Sentinel-1 RTC data from the Microsoft Planetary Computer sourced from Catalyst. RTC data includes radiometric calibration, terrain correction, and other custom data processing by Catalyst. If you use other sources (e.g., ASF, Copernicus Hub), ensure similar preprocessing steps are applied. Results may differ if preprocessing is inconsistent.
+
+However, the model will still work with data retrieved from other sources. For example, here's how to download images from the Alaska Satellite Facility (ASF) (https://search.asf.alaska.edu/).
+
+First, you can use the geographic and temporal search function to identify the Sentinel-1 images you want to download - remember, you need a pre and a post image. Ideally you should choose images from the same satellite (S1A or S1C as of Nov 2025) and the same time of day to reduce any observational artifacts that mimic flooding. Once you have found your images, you have to select each image for further processing - the raw values in the GRD file are not calibrated and therefore are not suitable for ingestion into the model. You can do this manually in a tool like ESA SNAP or use the ASF pipeline, as shown below. 
+
+First, click on the icon with three squares and then click 'RTC Gamma' and add the GRD_HD Job.
+<p align="center">
+  <img src="images/ASF_On_Demand_Processing_Step_1.png" width="500"/>
+</p>
+
+
+Next, click on the 'On Demand' icon at the top and go to the 'On Demand Queue'. You **must** use gamma0 for radiometry and power for the scale. It is **recommended** to apply DEM Matching and Speckle filtering. For pixel spacing, 10 meters is the highest resolution but the processing will take longer.
+<p align="center">
+  <img src="images/ASF_On_Demand_Processing_Step_2.png" width="500"/>
+</p>
+
+Once the jobs are complete, you can download and unzip the files and get the pre and post VV and VH tif files for running the model on downloaded image pairs. 
+
+
+#### Running the model
+
 To run inference on local image pairs:
 
 ```bash
@@ -115,6 +140,9 @@ python src/run_flood_detection_downloaded_images.py \
     --output_name "flood_prediction.tif"
 ```
 
+### Additional post-model filtering
+
+The model may generate false positives in permanent water bodies. To remove those, you will need to filter out permanent water pixels after running the model. There are several appropriate options, including ESRI Land Cover mappings (https://livingatlas.arcgis.com/landcover/), ESA World Cover (https://esa-worldcover.org/en) or Global Surface Water (https://global-surface-water.appspot.com/). These data sources are also available via the Microsoft Planetary Computer (https://planetarycomputer.microsoft.com/explore).
 
 ## Project Structure
 
