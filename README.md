@@ -142,7 +142,7 @@ python src/run_flood_detection_downloaded_images.py \
 
 ### Additional post-model filtering
 
-The model may generate false positives in permanent water bodies. To remove those, you will need to filter out permanent water pixels after running the model. There are several appropriate options, including ESRI Land Cover mappings (https://livingatlas.arcgis.com/landcover/), ESA World Cover (https://esa-worldcover.org/en) or Global Surface Water (https://global-surface-water.appspot.com/). These data sources are also available via the Microsoft Planetary Computer (https://planetarycomputer.microsoft.com/explore).
+The model may generate false positives in permanent water bodies. To remove those, you will need to filter out permanent water pixels after running the model. There are several appropriate options, including ESRI Land Cover mappings (https://livingatlas.arcgis.com/landcover/), ESA World Cover (https://esa-worldcover.org/en), or Global Surface Water (https://global-surface-water.appspot.com/). These data sources are also available via the Microsoft Planetary Computer (https://planetarycomputer.microsoft.com/explore).
 
 ## Project Structure
 
