@@ -105,7 +105,7 @@ This will:
 
 #### Downloading images
 
-You can download images from planetary computer, or any other Sentinel-1 imagery provided. **Important:** This model was trained on Sentinel-1 RTC data from the Microsoft Planetary Computer sourced from Catalyst. RTC data includes radiometric calibration, terrain correction, and other custom data processing by Catalyst. If you use other sources (e.g., ASF, Copernicus Hub), ensure similar preprocessing steps are applied. Results may differ if preprocessing is inconsistent.
+You can download images from Planetary Computer, or any other Sentinel-1 imagery provided. **Important:** This model was trained on Sentinel-1 RTC data from the Microsoft Planetary Computer sourced from Catalyst. RTC data includes radiometric calibration, terrain correction, and other custom data processing by Catalyst. If you use other sources (e.g., ASF, Copernicus Hub), ensure similar preprocessing steps are applied. Results may differ if preprocessing is inconsistent.
 
 However, the model will still work with data retrieved from other sources. For example, here's how to download images from the Alaska Satellite Facility (ASF) (https://search.asf.alaska.edu/).
 
