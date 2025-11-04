@@ -1,6 +1,7 @@
 # Core data science and machine learning libraries
 numpy
 pandas
+scipy
 
 # Deep learning framework
 torch
