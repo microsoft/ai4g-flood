@@ -31,7 +31,7 @@ def parse_args():
     parser.add_argument("--start_date", type=str, required=True, help="Start date for image search (YYYY-MM-DD).")
     parser.add_argument("--end_date", type=str, required=True, help="End date for image search (YYYY-MM-DD).")
     parser.add_argument(
-        "--model_path", type=str, default="./models/ai4g_sar_model.ckpt", help="Path to the trained model file."
+        "--model_path", type=str, default="./models/ai4g_sar_model.pth", help="Path to the trained model file."
     )
     parser.add_argument("--output_dir", type=str, required=True, help="Directory to save output files.")
     parser.add_argument(
